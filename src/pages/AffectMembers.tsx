@@ -104,10 +104,18 @@ const AffectMembers = () => {
 
     const payload = {
       planningId: selectedPlanningId,
-      assignments: selectedMembers.map((memberId) => ({
-        member: memberId,
-        days: selectedDays[memberId] || [],
-      })),
+      assignments: selectedMembers.map((memberId) => {
+        // Recherche du membre dans la liste des membres
+        const member = members.find((m) => String(m.id) === String(memberId));
+        const nom = member?.Nom ?? member?.nom ?? "Nom ?";
+        const prenom = member?.Prenom ?? member?.prenom ?? "";
+
+        return {
+          member: memberId,
+          memberName: `${nom} ${prenom}`.trim(),  // Suppression de "Prenom ?"
+          days: selectedDays[memberId] || [],
+        };
+      }),
     };
 
     setLoading(true);
