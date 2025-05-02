@@ -101,35 +101,50 @@ const AffectMembers = () => {
       alert("Sélectionnez un planning et des membres.");
       return;
     }
-
+  
     const payload = {
       planningId: selectedPlanningId,
       assignments: selectedMembers.map((memberId) => {
-        // Recherche du membre dans la liste des membres
         const member = members.find((m) => String(m.id) === String(memberId));
         const nom = member?.Nom ?? member?.nom ?? "Nom ?";
         const prenom = member?.Prenom ?? member?.prenom ?? "";
-
+        const email = (member as any)?.email ?? "email_inconnu@example.com"; // Ajout email si dispo
+  
         return {
           member: memberId,
-          memberName: `${nom} ${prenom}`.trim(),  // Suppression de "Prenom ?"
+          memberName: `${nom} ${prenom}`.trim(),
+          email: email,
           days: selectedDays[memberId] || [],
         };
       }),
     };
-
+  
     setLoading(true);
+    setError("");
+  
     axios
       .post("http://localhost:5000/save-assignments", payload)
       .then(() => {
-        alert("Les affectations ont été sauvegardées avec succès");
-        setLoading(false);
+        alert("Les affectations ont été sauvegardées avec succès.");
+  
+        // Envoi des emails après sauvegarde
+        axios
+          .post("http://localhost:5000/send-emails", payload)
+          .then(() => {
+            alert("Les emails ont été envoyés avec succès.");
+            setLoading(false);
+          })
+          .catch((emailError) => {
+            setError("Erreur lors de l'envoi des emails: " + emailError.message);
+            setLoading(false);
+          });
       })
       .catch((error) => {
         setError("Erreur lors de la sauvegarde: " + error.message);
         setLoading(false);
       });
   };
+  
 
   const getMemberName = (id: string | number) => {
     const member = members.find((m) => String(m.id) === String(id));
